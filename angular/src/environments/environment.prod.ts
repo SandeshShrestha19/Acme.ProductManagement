@@ -1,0 +1,35 @@
+import { Environment } from '@abp/ng.core';
+
+const baseUrl = 'http://localhost:4200';
+
+const oAuthConfig = {
+  issuer: 'https://localhost:44362/',
+  redirectUri: baseUrl,
+  clientId: 'ProductManagement_App',
+  responseType: 'code',
+  scope: 'offline_access ProductManagement',
+  requireHttps: true,
+};
+
+export const environment = {
+  production: true,
+  application: {
+    baseUrl,
+    name: 'ProductManagement',
+  },
+  oAuthConfig,
+  apis: {
+    default: {
+      url: 'https://localhost:44362',
+      rootNamespace: 'Acme.ProductManagement',
+    },
+    AbpAccountPublic: {
+      url: oAuthConfig.issuer,
+      rootNamespace: 'AbpAccountPublic',
+    },
+  },
+  remoteEnv: {
+    url: '/getEnvConfig',
+    mergeStrategy: 'deepmerge'
+  }
+} as Environment;
