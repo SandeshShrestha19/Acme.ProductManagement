@@ -3,6 +3,7 @@ using System;
 using Acme.ProductManagement.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Volo.Abp.EntityFrameworkCore;
@@ -12,9 +13,11 @@ using Volo.Abp.EntityFrameworkCore;
 namespace Acme.ProductManagement.Migrations
 {
     [DbContext(typeof(ProductManagementDbContext))]
-    partial class ProductManagementDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251115113037_Created_Entity_Tables")]
+    partial class Created_Entity_Tables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -125,7 +128,7 @@ namespace Acme.ProductManagement.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("OrderId")
+                    b.Property<Guid?>("OrderId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("ProductId")
@@ -140,6 +143,8 @@ namespace Acme.ProductManagement.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("OrderId");
+
+                    b.HasIndex("ProductId");
 
                     b.ToTable("AppOrderItems", (string)null);
                 });
@@ -2108,9 +2113,15 @@ namespace Acme.ProductManagement.Migrations
                 {
                     b.HasOne("Acme.ProductManagement.Orders.Order", null)
                         .WithMany("OrderItems")
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasForeignKey("OrderId");
+
+                    b.HasOne("Acme.ProductManagement.Products.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("Acme.ProductManagement.Orders.Order", b =>

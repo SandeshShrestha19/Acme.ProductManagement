@@ -14,6 +14,11 @@ using Volo.Abp.SettingManagement.EntityFrameworkCore;
 using Volo.Abp.OpenIddict.EntityFrameworkCore;
 using Volo.Abp.TenantManagement;
 using Volo.Abp.TenantManagement.EntityFrameworkCore;
+using Acme.ProductManagement.Products;
+using Acme.ProductManagement.Categories;
+using Acme.ProductManagement.Customers;
+using Acme.ProductManagement.Orders;
+using Acme.ProductManagement.OrderItems;
 
 namespace Acme.ProductManagement.EntityFrameworkCore;
 
@@ -26,7 +31,11 @@ public class ProductManagementDbContext :
     IIdentityDbContext
 {
     /* Add DbSet properties for your Aggregate Roots / Entities here. */
-
+    public DbSet<Product> Products { get; set; }
+    public DbSet<Category> Categories { get; set; }
+    public DbSet<Customer> Customers { get; set; }
+    public DbSet<Order> Orders { get; set; }
+    public DbSet<OrderItem> OrderItems { get; set; }
 
     #region Entities from the modules
 
@@ -78,7 +87,7 @@ public class ProductManagementDbContext :
         builder.ConfigureOpenIddict();
         builder.ConfigureTenantManagement();
         builder.ConfigureBlobStoring();
-        
+
         /* Configure your own tables/entities inside here */
 
         //builder.Entity<YourEntity>(b =>
@@ -87,5 +96,40 @@ public class ProductManagementDbContext :
         //    b.ConfigureByConvention(); //auto configure for the base class props
         //    //...
         //});
+        builder.Entity<Product>(b =>
+        {
+            b.ToTable(ProductManagementConsts.DbTablePrefix + "Products", ProductManagementConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Name).IsRequired().HasMaxLength(128);
+            b.Property(x => x.Price).HasColumnType("decimal(18,2)");
+            b.Property(x => x.Stock).IsRequired();
+        });
+        builder.Entity<Category>(b =>
+        {
+            b.ToTable(ProductManagementConsts.DbTablePrefix + "Categories", ProductManagementConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Name).IsRequired().HasMaxLength(128);
+            b.Property(x => x.Description).HasMaxLength(512);
+        });
+        builder.Entity<Customer>(b =>
+        {
+            b.ToTable(ProductManagementConsts.DbTablePrefix + "Customers", ProductManagementConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.FullName).IsRequired().HasMaxLength(200);
+            b.Property(x => x.PhoneNumber).IsRequired().HasMaxLength(20);
+
+        });
+        builder.Entity<Order>(b =>
+        {
+            b.ToTable(ProductManagementConsts.DbTablePrefix + "Orders", ProductManagementConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.OrderDate).IsRequired();
+            b.Property(x => x.OrderStatus).IsRequired();
+        });
+        builder.Entity<OrderItem>(b =>
+        {
+            b.ToTable(ProductManagementConsts.DbTablePrefix + "OrderItems", ProductManagementConsts.DbSchema);
+            b.ConfigureByConvention();
+        });
     }
 }
