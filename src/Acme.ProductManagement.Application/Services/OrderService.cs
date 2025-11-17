@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Acme.ProductManagement.Customers;
 using Acme.ProductManagement.DTOs.OrderDto;
+using Acme.ProductManagement.DTOs.OrderItemDto;
 using Acme.ProductManagement.Enums;
 using Acme.ProductManagement.Interfaces;
 using Acme.ProductManagement.OrderItems;
@@ -28,7 +29,6 @@ namespace Acme.ProductManagement.Services
         public OrderService(IRepository<Order, Guid> orderRepository)
         : base(orderRepository)
         {
-
         }
     }
 }
