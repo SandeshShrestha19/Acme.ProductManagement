@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Acme.ProductManagement.DTOs.OrderDto;
+using Acme.ProductManagement.DTOs.OrderItemDto;
 using Acme.ProductManagement.Enums;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
@@ -17,6 +18,6 @@ namespace Acme.ProductManagement.Interfaces
         PagedAndSortedResultRequestDto, 
         CreateOrderDto,
         UpdateOrderDto>
-    {
+    { 
     }
 }
