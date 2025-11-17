@@ -23,7 +23,6 @@ public class ProductManagementApplicationAutoMapperProfile : Profile
         CreateMap<CreateUpdateCategoryDto, Category>();
 
         CreateMap<Order, OrderDto>();
-        CreateMap<Order, OrderListDto>();
         CreateMap<OrderItem, OrderItemDto>();
         CreateMap<CreateOrderItemDto, OrderItem>();
         CreateMap<UpdateOrderItemDto, OrderItem>();
