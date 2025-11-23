@@ -7,9 +7,13 @@ namespace Acme.ProductManagement.DTOs.ItemsDto
         public Guid Id { get; set; }
         public Guid OrderId { get; set; }
         public Guid ProductId { get; set; }
-        public string ProductName { get; set; } 
+        public string ProductName { get; set; }
+        public decimal ProductPrice { get; set; }
         public int Quantity { get; set; }
-        public decimal UnitPrice { get; set; }
-        public decimal TotalPrice => Quantity * UnitPrice;
+        public decimal TotalPrice => Quantity * ProductPrice;
+
+        public OrderItemDto()
+        {
+        }
     }
 }
