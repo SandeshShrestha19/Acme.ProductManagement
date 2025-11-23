@@ -12,12 +12,10 @@ using Volo.Abp.DependencyInjection;
 
 namespace Acme.ProductManagement.Interfaces
 {
-    public interface IOrderService : ICrudAppService< 
-        OrderDto, 
-        Guid, 
-        PagedAndSortedResultRequestDto, 
-        CreateOrderDto,
-        UpdateOrderDto>
-    { 
+    public interface IOrderService : IApplicationService
+    {
+        Task CreateAsync(CreateOrderDto createDto);
+        Task UpdateAsync(Guid orderId, UpdateOrderDto updateDto);
+        Task DeleteAsync(Guid orderId);
     }
 }
