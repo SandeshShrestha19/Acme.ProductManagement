@@ -18,7 +18,8 @@ using Acme.ProductManagement.Products;
 using Acme.ProductManagement.Categories;
 using Acme.ProductManagement.Customers;
 using Acme.ProductManagement.Orders;
-using Acme.ProductManagement.OrderItems;
+using Acme.ProductManagement.Order;
+using Acme.ProductManagement.Inventories;
 
 namespace Acme.ProductManagement.EntityFrameworkCore;
 
@@ -34,8 +35,9 @@ public class ProductManagementDbContext :
     public DbSet<Product> Products { get; set; }
     public DbSet<Category> Categories { get; set; }
     public DbSet<Customer> Customers { get; set; }
-    public DbSet<Order> Orders { get; set; }
+    public DbSet<Orders.Order> Orders { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
+    public DbSet<Inventory> Inventories { get; set; }
 
     #region Entities from the modules
 
@@ -102,7 +104,6 @@ public class ProductManagementDbContext :
             b.ConfigureByConvention();
             b.Property(x => x.Name).IsRequired().HasMaxLength(128);
             b.Property(x => x.Price).HasColumnType("decimal(18,2)");
-            b.Property(x => x.Stock).IsRequired();
         });
         builder.Entity<Category>(b =>
         {
@@ -119,7 +120,7 @@ public class ProductManagementDbContext :
             b.Property(x => x.PhoneNumber).IsRequired().HasMaxLength(20);
 
         });
-        builder.Entity<Order>(b =>
+        builder.Entity<Orders.Order>(b =>
         {
             b.ToTable(ProductManagementConsts.DbTablePrefix + "Orders", ProductManagementConsts.DbSchema);
             b.ConfigureByConvention();
@@ -129,6 +130,11 @@ public class ProductManagementDbContext :
         builder.Entity<OrderItem>(b =>
         {
             b.ToTable(ProductManagementConsts.DbTablePrefix + "OrderItems", ProductManagementConsts.DbSchema);
+            b.ConfigureByConvention();
+        });
+        builder.Entity<Inventory>(b =>
+        {
+            b.ToTable(ProductManagementConsts.DbTablePrefix + "Inventories", ProductManagementConsts.DbSchema);
             b.ConfigureByConvention();
         });
     }
