@@ -6,6 +6,7 @@ using Volo.Abp.AutoMapper;
 using Volo.Abp.FeatureManagement;
 using Volo.Abp.Modularity;
 using Volo.Abp.TenantManagement;
+using Volo.Abp.AspNetCore.Mvc;
 
 namespace Acme.ProductManagement;
 
@@ -17,7 +18,8 @@ namespace Acme.ProductManagement;
     typeof(AbpIdentityApplicationModule),
     typeof(AbpAccountApplicationModule),
     typeof(AbpTenantManagementApplicationModule),
-    typeof(AbpSettingManagementApplicationModule)
+    typeof(AbpSettingManagementApplicationModule),
+    typeof(AbpAutoMapperModule)
     )]
 public class ProductManagementApplicationModule : AbpModule
 {
@@ -26,6 +28,12 @@ public class ProductManagementApplicationModule : AbpModule
         Configure<AbpAutoMapperOptions>(options =>
         {
             options.AddMaps<ProductManagementApplicationModule>();
+        });
+
+        Configure<AbpAspNetCoreMvcOptions>(options =>
+        {
+            options.ConventionalControllers
+                .Create(typeof(ProductManagementApplicationModule).Assembly);
         });
     }
 }
