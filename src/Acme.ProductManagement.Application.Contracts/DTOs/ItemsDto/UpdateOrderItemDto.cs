@@ -8,7 +8,7 @@ namespace Acme.ProductManagement.DTOs.OrderItemDto
 {
     public class UpdateOrderItemDto
     {
-        public int Quantity {  get; set; }
-        public decimal UnitPrice { get; set; }
+        public Guid ProductId { get; set; }
+        public int Quantity { get; set; }
     }
 }
