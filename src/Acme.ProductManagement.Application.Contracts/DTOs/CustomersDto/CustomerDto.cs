@@ -1,14 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Acme.ProductManagement.Customers;
-using Volo.Abp.Application.Dtos;
 
 namespace Acme.ProductManagement.DTOs.CustomersDto
 {
     public class CustomerDto
     {
         public Guid Id { get; set; }
-        public string Name { get; set; }
+        public string FullName { get; set; }
         public string PhoneNumber { get; set; }
+        public List<OrdersDto.OrderDto> Orders { get; set; } = new List<OrdersDto.OrderDto>();
 
         public CustomerDto()
         {
@@ -17,8 +19,10 @@ namespace Acme.ProductManagement.DTOs.CustomersDto
         public CustomerDto(Customer customer)
         {
             Id = customer.Id;
-            Name = customer.FullName;
+            FullName = customer.FullName;
             PhoneNumber = customer.PhoneNumber;
+            Orders = customer.Orders?.Select(order => new OrdersDto.OrderDto(order)).ToList()
+                     ?? new List<OrdersDto.OrderDto>();
         }
     }
 }
