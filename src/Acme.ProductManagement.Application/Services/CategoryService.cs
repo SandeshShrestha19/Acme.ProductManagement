@@ -3,98 +3,201 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Acme.ProductManagement.Categories;
-using Acme.ProductManagement.DTOs;
+using Acme.ProductManagement.DTOs.CategoriesDto;
 using Acme.ProductManagement.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Volo.Abp;
 using Volo.Abp.Application.Services;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.Domain.Repositories;
 
-
 namespace Acme.ProductManagement.Services
 {
-    [Authorize]
     public class CategoryService : ApplicationService, ICategoryService, ITransientDependency
     {
         private readonly IRepository<Category, Guid> _categoryRepository;
         private readonly ILogger<CategoryService> _logger;
+
         public CategoryService(IRepository<Category, Guid> categoryRepository, ILogger<CategoryService> logger)
         {
             _categoryRepository = categoryRepository;
             _logger = logger;
         }
-        [HttpGet]
-        public async Task<List<CategoryDto>> GetListAsync()
+
+        public async Task<List<CategoryDto>> GetAllCategoriesAsync()
         {
             try
             {
-                var categories = await _categoryRepository.GetListAsync();
-                return categories.Select(category => new CategoryDto(category)).ToList();
+                // Use WithDetailsAsync to include Products collection (ABP way)
+                var categories = await _categoryRepository.WithDetailsAsync(c => c.Products);
+                var categoryList = await AsyncExecuter.ToListAsync(categories);
+
+                if (categoryList == null || !categoryList.Any())
+                {
+                    _logger.LogWarning("No categories found in the repository.");
+                    return new List<CategoryDto>();
+                }
+
+                return categoryList.Select(category => new CategoryDto(category)).ToList();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while getting list of categories");
-                throw;
+                throw new BusinessException(
+                    code: "ProductManagement:CategoryListRetrievalError",
+                    message: "An error occurred while retrieving categories",
+                    innerException: ex
+                );
             }
-            
         }
-        [HttpGet("category/{categoryId}")]
-        public async Task<CategoryDto> GetAsync(Guid categoryId)
+
+        public async Task<CategoryDto> GetCategoryByIdAsync(Guid categoryId)
         {
             try
             {
-                var category = await _categoryRepository.GetAsync(categoryId);
+                // Use WithDetailsAsync to include Products collection (ABP way)
+                var categories = await _categoryRepository.WithDetailsAsync(c => c.Products);
+                var category = await AsyncExecuter.FirstOrDefaultAsync(
+                    categories.Where(c => c.Id == categoryId));
+
+                if (category == null)
+                {
+                    _logger.LogWarning("Category not found with ID {CategoryId}", categoryId);
+                    throw new BusinessException(
+                        code: "ProductManagement:CategoryNotFound",
+                        message: $"Category with ID {categoryId} not found"
+                    );
+                }
+
                 return new CategoryDto(category);
+            }
+            catch (BusinessException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while getting requested category");
-                throw;
+                throw new BusinessException(
+                    code: "ProductManagement:CategoryRetrievalError",
+                    message: "An error occurred while retrieving the category",
+                    innerException: ex
+                );
             }
         }
-        [HttpPost]
-        public async Task CreateAsync([FromBody] CreateUpdateCategoryDto createDto)
+
+        public async Task CreateAsync([FromBody] CreateCategoryDto createDto)
         {
             try
             {
-                var category = new Category(name: createDto.Name, description: createDto.Description ?? string.Empty);
-                await _categoryRepository.InsertAsync(category);
+                var category = new Category(
+                    name: createDto.Name,
+                    description: createDto.Description ?? string.Empty);
+
+                await _categoryRepository.InsertAsync(category, autoSave: true);
+
+                _logger.LogInformation(
+                    "Category created successfully with ID {CategoryId} and Name {CategoryName}",
+                    category.Id,
+                    category.Name
+                );
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while creating category");
-                throw;
+                throw new BusinessException(
+                    code: "ProductManagement:CategoryCreationError",
+                    message: "An error occurred while creating the category",
+                    innerException: ex
+                );
             }
         }
-        [HttpPut("category/{categoryId}")]
-        public async Task UpdateAsync(Guid categoryId,[FromBody] CreateUpdateCategoryDto updateDto)
+
+        public async Task UpdateAsync(Guid categoryId, [FromBody] UpdateCategoryDto updateDto)
         {
             try
             {
                 var category = await _categoryRepository.GetAsync(categoryId);
-                category.Update(name: updateDto.Name, description: updateDto.Description ?? string.Empty);
-                await _categoryRepository.UpdateAsync(category);
+
+                if (category == null)
+                {
+                    _logger.LogWarning("Category not found with ID {CategoryId}", categoryId);
+                    throw new BusinessException(
+                        code: "ProductManagement:CategoryNotFound",
+                        message: $"Category with ID {categoryId} not found"
+                    );
+                }
+
+                category.Update(name: updateDto.Name, description: updateDto.Description);
+                await _categoryRepository.UpdateAsync(category, autoSave: true);
+
+                _logger.LogInformation("Category updated successfully with ID {CategoryId}", categoryId);
+            }
+            catch (BusinessException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while updating category");
-                throw;
+                throw new BusinessException(
+                    code: "ProductManagement:CategoryUpdateError",
+                    message: "An error occurred while updating the category",
+                    innerException: ex
+                );
             }
         }
-        [HttpDelete("category/{categoryId}")]
+
         public async Task DeleteAsync(Guid categoryId)
         {
             try
             {
-                var category = await _categoryRepository.GetAsync(categoryId);
-                await _categoryRepository.DeleteAsync(category);
+                // Include Products to check if category has products before deleting
+                var categories = await _categoryRepository.WithDetailsAsync(c => c.Products);
+                var category = await AsyncExecuter.FirstOrDefaultAsync(
+                    categories.Where(c => c.Id == categoryId));
+
+                if (category == null)
+                {
+                    _logger.LogWarning("Category not found with ID {CategoryId}", categoryId);
+                    throw new BusinessException(
+                        code: "ProductManagement:CategoryNotFound",
+                        message: $"Category with ID {categoryId} not found"
+                    );
+                }
+
+                // Check if category has products
+                if (category.HasProducts())
+                {
+                    _logger.LogWarning(
+                        "Cannot delete category {CategoryId} because it contains {ProductCount} product(s)",
+                        categoryId,
+                        category.GetProductCount()
+                    );
+                    throw new BusinessException(
+                        code: "ProductManagement:CategoryHasProducts",
+                        message: $"Cannot delete category because it contains {category.GetProductCount()} product(s). Please remove or reassign the products first."
+                    );
+                }
+
+                await _categoryRepository.DeleteAsync(category, autoSave: true);
+
+                _logger.LogInformation("Category deleted successfully with ID {CategoryId}", categoryId);
+            }
+            catch (BusinessException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while deleting category");
-                throw;
+                throw new BusinessException(
+                    code: "ProductManagement:CategoryDeletionError",
+                    message: "An error occurred while deleting the category",
+                    innerException: ex
+                );
             }
         }
     }
