@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Acme.ProductManagement.DTOs.CustomersDto;
 using Volo.Abp.Application.Dtos;
@@ -8,9 +9,10 @@ namespace Acme.ProductManagement.Interfaces
 {
     public interface ICustomerService : IApplicationService
     {
-        Task CreateAsync(CreateUpdateCustomerDto createDto);
-        Task UpdateAsync(Guid customerId, CreateUpdateCustomerDto updateDto);
+        Task<List<CustomerDto>> GetAllCustomersAsync();
+        Task CreateAsync(CreateCustomerDto createDto);
+        Task UpdateAsync(Guid customerId, UpdateCustomerDto updateDto);
         Task DeleteAsync(Guid customerId);
-        Task<CustomerDto> GetAsync(Guid customerId);
+        Task<CustomerDto> GetCustomerByIdAsync(Guid customerId);
     }
 }

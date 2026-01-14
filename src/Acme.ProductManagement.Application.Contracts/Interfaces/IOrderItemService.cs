@@ -14,8 +14,8 @@ namespace Acme.ProductManagement.Interfaces
 {
     public interface IOrderItemService : IApplicationService
     {
-        Task CreateAsync(CreateOrderItemDto createDto);
-        Task UpdateAsync(Guid itemId, UpdateOrderItemDto updateDto);
-        Task DeleteAsync(Guid itemId);
+        Task<List<OrderItemDto>> GetAllOrderItemsAsync();
+        //Task CreateAsync(CreateOrderItemDto createDto);
+        //Task UpdateAsync(Guid itemId, UpdateOrderItemDto updateDto);
     }
 }
