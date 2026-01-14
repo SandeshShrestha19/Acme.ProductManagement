@@ -13,8 +13,8 @@ using Volo.Abp.EntityFrameworkCore;
 namespace Acme.ProductManagement.Migrations
 {
     [DbContext(typeof(ProductManagementDbContext))]
-    [Migration("20251116042255_Created_OrderAndOrderItems_Entity")]
-    partial class Created_OrderAndOrderItems_Entity
+    [Migration("20260114050308_ChangedProductProperties")]
+    partial class ChangedProductProperties
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -131,11 +131,22 @@ namespace Acme.ProductManagement.Migrations
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("OrderId1")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("ProductId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
                     b.Property<int>("Quantity")
                         .HasColumnType("integer");
+
+                    b.Property<decimal>("TotalPrice")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("UnitPrice")
                         .HasColumnType("numeric");
@@ -143,6 +154,10 @@ namespace Acme.ProductManagement.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("OrderId");
+
+                    b.HasIndex("OrderId1");
+
+                    b.HasIndex("ProductId");
 
                     b.ToTable("AppOrderItems", (string)null);
                 });
@@ -219,6 +234,9 @@ namespace Acme.ProductManagement.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("CreatorId");
 
+                    b.Property<int>("CurrentStock")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("text");
@@ -243,9 +261,6 @@ namespace Acme.ProductManagement.Migrations
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("Stock")
-                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -2109,19 +2124,33 @@ namespace Acme.ProductManagement.Migrations
 
             modelBuilder.Entity("Acme.ProductManagement.OrderItems.OrderItem", b =>
                 {
-                    b.HasOne("Acme.ProductManagement.Orders.Order", null)
-                        .WithMany("OrderItems")
+                    b.HasOne("Acme.ProductManagement.Orders.Order", "Order")
+                        .WithMany()
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("Acme.ProductManagement.Orders.Order", null)
+                        .WithMany("Items")
+                        .HasForeignKey("OrderId1");
+
+                    b.HasOne("Acme.ProductManagement.Products.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("Acme.ProductManagement.Orders.Order", b =>
                 {
                     b.HasOne("Acme.ProductManagement.Customers.Customer", "Customer")
-                        .WithMany()
+                        .WithMany("Orders")
                         .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Customer");
@@ -2132,7 +2161,7 @@ namespace Acme.ProductManagement.Migrations
                     b.HasOne("Acme.ProductManagement.Categories.Category", "Category")
                         .WithMany("Products")
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Category");
@@ -2294,9 +2323,14 @@ namespace Acme.ProductManagement.Migrations
                     b.Navigation("Products");
                 });
 
+            modelBuilder.Entity("Acme.ProductManagement.Customers.Customer", b =>
+                {
+                    b.Navigation("Orders");
+                });
+
             modelBuilder.Entity("Acme.ProductManagement.Orders.Order", b =>
                 {
-                    b.Navigation("OrderItems");
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("Volo.Abp.AuditLogging.AuditLog", b =>

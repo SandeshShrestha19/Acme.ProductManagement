@@ -13,8 +13,8 @@ using Volo.Abp.EntityFrameworkCore;
 namespace Acme.ProductManagement.Migrations
 {
     [DbContext(typeof(ProductManagementDbContext))]
-    [Migration("20251119075345_Created_Inventory_Entity")]
-    partial class Created_Inventory_Entity
+    [Migration("20260113114732_RemovedProperties")]
+    partial class RemovedProperties
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -123,26 +123,7 @@ namespace Acme.ProductManagement.Migrations
                     b.ToTable("AppCustomers", (string)null);
                 });
 
-            modelBuilder.Entity("Acme.ProductManagement.Inventories.Inventory", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("CurrentStock")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId")
-                        .IsUnique();
-
-                    b.ToTable("AppInventories", (string)null);
-                });
-
-            modelBuilder.Entity("Acme.ProductManagement.Order.OrderItem", b =>
+            modelBuilder.Entity("Acme.ProductManagement.OrderItems.OrderItem", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
@@ -150,15 +131,22 @@ namespace Acme.ProductManagement.Migrations
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("OrderId1")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("ProductId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("ProductName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("integer");
+
+                    b.Property<decimal>("TotalPrice")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("UnitPrice")
                         .HasColumnType("numeric");
@@ -166,6 +154,8 @@ namespace Acme.ProductManagement.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("OrderId");
+
+                    b.HasIndex("OrderId1");
 
                     b.HasIndex("ProductId");
 
@@ -243,6 +233,9 @@ namespace Acme.ProductManagement.Migrations
                     b.Property<Guid?>("CreatorId")
                         .HasColumnType("uuid")
                         .HasColumnName("CreatorId");
+
+                    b.Property<int>("CurrentStock")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -2129,29 +2122,22 @@ namespace Acme.ProductManagement.Migrations
                     b.ToTable("AbpTenantConnectionStrings", (string)null);
                 });
 
-            modelBuilder.Entity("Acme.ProductManagement.Inventories.Inventory", b =>
-                {
-                    b.HasOne("Acme.ProductManagement.Products.Product", "Product")
-                        .WithOne("Inventory")
-                        .HasForeignKey("Acme.ProductManagement.Inventories.Inventory", "ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-                });
-
-            modelBuilder.Entity("Acme.ProductManagement.Order.OrderItem", b =>
+            modelBuilder.Entity("Acme.ProductManagement.OrderItems.OrderItem", b =>
                 {
                     b.HasOne("Acme.ProductManagement.Orders.Order", "Order")
-                        .WithMany("OrderItems")
+                        .WithMany()
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Acme.ProductManagement.Orders.Order", null)
+                        .WithMany("Items")
+                        .HasForeignKey("OrderId1");
+
                     b.HasOne("Acme.ProductManagement.Products.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Order");
@@ -2162,9 +2148,9 @@ namespace Acme.ProductManagement.Migrations
             modelBuilder.Entity("Acme.ProductManagement.Orders.Order", b =>
                 {
                     b.HasOne("Acme.ProductManagement.Customers.Customer", "Customer")
-                        .WithMany()
+                        .WithMany("Orders")
                         .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Customer");
@@ -2175,7 +2161,7 @@ namespace Acme.ProductManagement.Migrations
                     b.HasOne("Acme.ProductManagement.Categories.Category", "Category")
                         .WithMany("Products")
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Category");
@@ -2337,15 +2323,14 @@ namespace Acme.ProductManagement.Migrations
                     b.Navigation("Products");
                 });
 
-            modelBuilder.Entity("Acme.ProductManagement.Orders.Order", b =>
+            modelBuilder.Entity("Acme.ProductManagement.Customers.Customer", b =>
                 {
-                    b.Navigation("OrderItems");
+                    b.Navigation("Orders");
                 });
 
-            modelBuilder.Entity("Acme.ProductManagement.Products.Product", b =>
+            modelBuilder.Entity("Acme.ProductManagement.Orders.Order", b =>
                 {
-                    b.Navigation("Inventory")
-                        .IsRequired();
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("Volo.Abp.AuditLogging.AuditLog", b =>
